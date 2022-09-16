@@ -2475,6 +2475,7 @@ typedef enum {
     TLSX_ENCRYPT_THEN_MAC           = 0x0016, /* RFC 7366 */
 #endif
     TLSX_EXTENDED_MASTER_SECRET     = 0x0017, /* HELLO_EXT_EXTMS */
+    TLSX_RECORD_SIZE_LIMIT          = 0x001C,
     TLSX_SESSION_TICKET             = 0x0023,
 #ifdef WOLFSSL_TLS13
     #if defined(HAVE_SESSION_TICKET) || !defined(NO_PSK)
@@ -2556,7 +2557,8 @@ WOLFSSL_LOCAL int TLSX_Push(TLSX** list, TLSX_Type type,
    || defined(HAVE_ALPN)                          \
    || defined(HAVE_SESSION_TICKET)                \
    || defined(HAVE_SECURE_RENEGOTIATION)          \
-   || defined(HAVE_SERVER_RENEGOTIATION_INFO)
+   || defined(HAVE_SERVER_RENEGOTIATION_INFO)     \
+   || defined(HAVE_RECORD_SIZE_LIMIT)
 
 #error Using TLS extensions requires HAVE_TLS_EXTENSIONS to be defined.
 
@@ -2630,6 +2632,12 @@ WOLFSSL_LOCAL int TLSX_ALPN_SetOptions(TLSX** extensions, byte option);
 WOLFSSL_LOCAL int TLSX_UseMaxFragment(TLSX** extensions, byte mfl, void* heap);
 
 #endif /* HAVE_MAX_FRAGMENT */
+
+#ifdef HAVE_RECORD_SIZE_LIMIT
+
+WOLFSSL_LOCAL int TLSX_UseRecordSizeLimit(TLSX** extensions, word16 mfl, void* heap);
+
+#endif /* HAVE_RECORD_SIZE_LIMIT */
 
 /** Truncated HMAC - RFC 6066 (session 7) */
 #ifdef HAVE_TRUNCATED_HMAC
@@ -4974,8 +4982,9 @@ struct WOLFSSL {
 #endif
 #ifdef HAVE_TLS_EXTENSIONS
     TLSX* extensions;                  /* RFC 6066 TLS Extensions data */
-    #ifdef HAVE_MAX_FRAGMENT
-        word16 max_fragment;
+    #if defined(HAVE_RECORD_SIZE_LIMIT) || defined(HAVE_MAX_FRAGMENT)
+        word16 record_size_limit_send;
+        word16 record_size_limit_receive;
     #endif
     #ifdef HAVE_TRUNCATED_HMAC
         byte truncated_hmac;

@@ -6812,8 +6812,9 @@ int InitSSL(WOLFSSL* ssl, WOLFSSL_CTX* ctx, int writeDup)
 #endif
 
 #ifdef HAVE_TLS_EXTENSIONS
-#ifdef HAVE_MAX_FRAGMENT
-    ssl->max_fragment = MAX_RECORD_SIZE;
+#if defined(HAVE_RECORD_SIZE_LIMIT) || defined(HAVE_MAX_FRAGMENT)
+    ssl->record_size_limit_send = MAX_RECORD_SIZE;
+    ssl->record_size_limit_receive = MAX_RECORD_SIZE;
 #endif
 #ifdef HAVE_ALPN
     ssl->alpn_client_list = NULL;
@@ -10382,8 +10383,8 @@ static int GetRecordHeader(WOLFSSL* ssl, const byte* input, word32* inOutIdx,
     }
 
     /* record layer length check */
-#ifdef HAVE_MAX_FRAGMENT
-    if (*size > (ssl->max_fragment + MAX_COMP_EXTRA + MAX_MSG_EXTRA)) {
+#if defined(HAVE_MAX_FRAGMENT) || defined(HAVE_RECORD_SIZE_LIMIT)
+    if (*size > (ssl->record_size_limit_receive + MAX_COMP_EXTRA + MAX_MSG_EXTRA)) {
         SendAlert(ssl, alert_fatal, record_overflow);
         WOLFSSL_ERROR_VERBOSE(LENGTH_ERROR);
         return LENGTH_ERROR;
@@ -23082,6 +23083,8 @@ const char* wolfSSL_ERR_reason_error_string(unsigned long e)
         return "DTLS ConnectionID mismatch or missing";
     case DTLS_TOO_MANY_FRAGMENTS_E:
         return "Received too many fragmented messages from peer error";
+    case INVALID_RECORD_SIZE_LIMIT:
+        return "The record size limit is invalid";
 
     default :
         return "unknown error number";
@@ -36289,10 +36292,10 @@ int wolfSSL_GetMaxFragSize(WOLFSSL* ssl, int maxFragment)
     }
 
 #ifdef HAVE_MAX_FRAGMENT
-    if ((ssl->max_fragment != 0) && ((word16)maxFragment > ssl->max_fragment)) {
-        maxFragment = ssl->max_fragment;
+    if ((ssl->record_size_limit_send != 0) && ((word16)maxFragment > ssl->record_size_limit_send)) {
+        maxFragment = ssl->record_size_limit_send;
     }
-#endif /* HAVE_MAX_FRAGMENT */
+#endif /* HAVE_MAX_FRAGMENT || HAVE_RECORD_SIZE_LIMIT */
 #ifdef WOLFSSL_DTLS
     if (IsDtlsNotSctpMode(ssl)) {
         int outputSz, mtuSz;

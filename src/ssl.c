@@ -2771,6 +2771,27 @@ int wolfSSL_CTX_UseMaxFragment(WOLFSSL_CTX* ctx, byte mfl)
 #endif /* NO_WOLFSSL_CLIENT */
 #endif /* HAVE_MAX_FRAGMENT */
 
+
+#ifdef HAVE_RECORD_SIZE_LIMIT
+
+int wolfSSL_UseRecordSizeLimit(WOLFSSL *ssl, word16 limit)
+{
+    if (ssl == NULL)
+        return BAD_FUNC_ARG;
+        
+    return TLSX_UseRecordSizeLimit(&ssl->extensions, limit, ssl->heap);
+}
+
+int wolfSSL_CTX_UseRecordSizeLimit(WOLFSSL_CTX *ctx, word16 limit)
+{
+    if (ctx == NULL)
+        return BAD_FUNC_ARG;
+    
+    return TLSX_UseRecordSizeLimit(&ctx->extensions, limit, ctx->heap);
+}
+
+#endif /* HAVE_RECORD_SIZE_LIMIT */
+
 #ifdef HAVE_TRUNCATED_HMAC
 #ifndef NO_WOLFSSL_CLIENT
 

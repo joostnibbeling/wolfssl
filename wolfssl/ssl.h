@@ -3773,6 +3773,13 @@ WOLFSSL_API int wolfSSL_CTX_UseMaxFragment(WOLFSSL_CTX* ctx, unsigned char mfl);
 #endif
 #endif /* HAVE_MAX_FRAGMENT */
 
+#ifdef HAVE_RECORD_SIZE_LIMIT
+
+WOLFSSL_API int wolfSSL_UseRecordSizeLimit(WOLFSSL* ssl, unsigned short limit);
+WOLFSSL_API int wolfSSL_CTX_UseRecordSizeLimit(WOLFSSL_CTX* ctx, unsigned short limit);
+
+#endif /* HAVE_RECORD_SIZE_LIMIT */
+
 /* Truncated HMAC */
 #ifdef HAVE_TRUNCATED_HMAC
 #ifndef NO_WOLFSSL_CLIENT
