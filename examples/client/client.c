@@ -1969,6 +1969,9 @@ THREAD_RETURN WOLFSSL_THREAD client_test(void* args)
 #ifdef HAVE_MAX_FRAGMENT
     byte maxFragment = 0;
 #endif
+#ifdef HAVE_RECORD_SIZE_LIMIT
+    word16 recordSizeLimit = 0;
+#endif
 #ifdef HAVE_TRUNCATED_HMAC
     byte truncatedHMAC = 0;
 #endif
@@ -2115,7 +2118,7 @@ THREAD_RETURN WOLFSSL_THREAD client_test(void* args)
             "ab:c:defgh:i;jk:l:mnop:q:rstu;v:wxyz"
             "A:B:CDE:F:GH:IJKL:M:NO:PQRS:TUVW:XYZ:"
             "01:23:4567:89"
-            "@#", long_options, 0)) != -1) {
+            "@#+:", long_options, 0)) != -1) {
         switch (ch) {
             case '?' :
                 if(myoptarg!=NULL) {
@@ -2434,7 +2437,15 @@ THREAD_RETURN WOLFSSL_THREAD client_test(void* args)
                     }
                 #endif
                 break;
-
+            case '+' :
+                #ifdef HAVE_RECORD_SIZE_LIMIT
+                    recordSizeLimit = atoi(myoptarg);
+                    if(recordSizeLimit > 16385 || recordSizeLimit < 64) {
+                        Usage();
+                        XEXIT_T(MY_EX_USAGE);
+                    }
+                #endif
+                break;  
             case 'T' :
                 #ifdef HAVE_TRUNCATED_HMAC
                     truncatedHMAC = 1;
@@ -3338,6 +3349,13 @@ THREAD_RETURN WOLFSSL_THREAD client_test(void* args)
         if (wolfSSL_CTX_UseMaxFragment(ctx, maxFragment) != WOLFSSL_SUCCESS) {
             wolfSSL_CTX_free(ctx); ctx = NULL;
             err_sys("UseMaxFragment failed");
+        }
+#endif
+#ifdef HAVE_RECORD_SIZE_LIMIT
+    if (recordSizeLimit)
+        if (wolfSSL_CTX_UseRecordSizeLimit(ctx, recordSizeLimit) != WOLFSSL_SUCCESS) {
+            wolfSSL_CTX_free(ctx); ctx = NULL;
+            err_sys("UseRecordSizeLimit failed");
         }
 #endif
 #ifdef HAVE_TRUNCATED_HMAC
